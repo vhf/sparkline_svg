@@ -354,6 +354,9 @@ defmodule SparklineSvg do
   @type ref_line_options ::
           list({:width, number()} | {:color, String.t()} | {:class, nil | String.t()})
 
+  @typedoc "Keyword list of options for the x window."
+  @type window_options :: list({:min, :auto | number()} | {:max, :auto | number()})
+
   @typedoc false
   @type opt_padding :: %{top: number(), right: number(), bottom: number(), left: number()}
 
@@ -368,7 +371,8 @@ defmodule SparklineSvg do
           placeholder_class: nil | String.t(),
           dots: nil | map(),
           line: nil | map(),
-          area: nil | map()
+          area: nil | map(),
+          window: nil | map()
         }
 
   @typedoc false
@@ -401,6 +405,7 @@ defmodule SparklineSvg do
       ~S'<svg width="100%" height="100%" viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg"></svg>'
 
   """
+
   @default_opts [
     width: 200,
     height: 50,
@@ -423,7 +428,12 @@ defmodule SparklineSvg do
       |> Map.update!(:padding, &expand_padding/1)
       |> Map.merge(%{dots: nil, line: nil, area: nil})
 
-    %SparklineSvg{datapoints: datapoints, options: options, markers: [], ref_lines: %{}}
+    %SparklineSvg{
+      datapoints: datapoints,
+      options: options,
+      markers: [],
+      ref_lines: %{}
+    }
   end
 
   @doc ~S"""
@@ -548,6 +558,29 @@ defmodule SparklineSvg do
     ref_lines = Map.put(sparkline.ref_lines, type, ref_line)
 
     %SparklineSvg{sparkline | ref_lines: ref_lines}
+  end
+
+  @doc ~S"""
+  TODO.
+
+  ## Examples
+      iex> true
+      true
+
+  """
+
+  @default_window_opts [min: :auto, max: :auto]
+
+  @doc since: "0.4.0"
+  @spec set_x_window(t()) :: t()
+  @spec set_x_window(t(), window_options()) :: t()
+  def set_x_window(sparkline, options \\ []) do
+    window_options =
+      @default_window_opts
+      |> Keyword.merge(options)
+      |> Map.new()
+
+    %SparklineSvg{sparkline | options: %{sparkline.options | window: window_options}}
   end
 
   @doc ~S"""
@@ -685,6 +718,7 @@ defmodule SparklineSvg do
 
     with :ok <- check_x_dimension(width, padding),
          :ok <- check_y_dimension(height, padding),
+         # Discard datapoints outside of the window
          {:ok, datapoints, type} <- Datapoint.clean(sparkline.datapoints),
          {:ok, markers} <- Marker.clean(sparkline.markers, type),
          {:ok, ref_lines} <- ReferenceLine.clean(sparkline.ref_lines) do
