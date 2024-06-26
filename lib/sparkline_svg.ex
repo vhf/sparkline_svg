@@ -475,8 +475,8 @@ defmodule SparklineSvg do
           ref_lines: ref_lines(),
           window: window()
         }
-  @enforce_keys [:datapoints, :options, :markers, :ref_lines, :window]
-  defstruct [:datapoints, :options, :markers, :ref_lines, :window]
+  @enforce_keys [:datapoints, :input, :options, :markers, :ref_lines, :window]
+  defstruct [:datapoints, :input, :options, :markers, :ref_lines, :window]
 
   @doc ~S"""
   Create a new sparkline struct with the given datapoints and options.
@@ -541,7 +541,8 @@ defmodule SparklineSvg do
     }
 
     %SparklineSvg{
-      datapoints: datapoints,
+      datapoints: [],
+      input: datapoints,
       options: opts,
       markers: [],
       ref_lines: %{},
@@ -904,7 +905,7 @@ defmodule SparklineSvg do
   @spec compute(t()) :: {:ok, t()} | {:error, atom()}
   defp compute(sparkline) do
     %{
-      datapoints: datapoints,
+      input: input,
       markers: markers,
       ref_lines: ref_lines,
       window: window,
@@ -915,7 +916,7 @@ defmodule SparklineSvg do
 
     with :ok <- check_x_dimension(width, padding),
          :ok <- check_y_dimension(height, padding),
-         {:ok, datapoints, window, type} <- Datapoint.clean(datapoints, window, sort),
+         {:ok, datapoints, window, type} <- Datapoint.clean(input, window, sort),
          {:ok, markers} <- Marker.clean(markers, type),
          {:ok, ref_lines} <- ReferenceLine.clean(ref_lines) do
       sparkline =
