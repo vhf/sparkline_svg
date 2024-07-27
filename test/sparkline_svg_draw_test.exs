@@ -56,10 +56,17 @@ defmodule SparklineSvgDrawTest do
   end
 
   test "to_svg!/1 with non-default options (for dots)" do
-    assert SparklineSvg.new([1, 2])
-           |> SparklineSvg.show_dots(r: 2, fill: "red")
+    dt = DateTime.new!(Date.new!(2024, 1, 2), Time.new!(1, 2, 3))
+
+    assert SparklineSvg.new([{dt, 1}, {DateTime.add(dt, 1), 2}])
+           |> SparklineSvg.show_dots(r: 2, fill: "red", "data-val": fn x -> "#{x}" end)
            |> SparklineSvg.to_svg!() ==
-             ~S'<svg height="100%" viewBox="0 0 200 50" width="100%" xmlns="http://www.w3.org/2000/svg"><circle cx="2.0" cy="48.0" fill="red" r="2" /><circle cx="198.0" cy="2.0" fill="red" r="2" /></svg>'
+             ~S'<svg height="100%" viewBox="0 0 200 50" width="100%" xmlns="http://www.w3.org/2000/svg"><circle cx="2.0" cy="48.0" data-val="1" fill="red" r="2" /><circle cx="198.0" cy="2.0" data-val="2" fill="red" r="2" /></svg>'
+
+    assert SparklineSvg.new([1, 2])
+           |> SparklineSvg.show_dots(r: 2, fill: "red", "data-val": fn x -> "#{x}" end)
+           |> SparklineSvg.to_svg!() ==
+             ~S'<svg height="100%" viewBox="0 0 200 50" width="100%" xmlns="http://www.w3.org/2000/svg"><circle cx="2.0" cy="48.0" data-val="1" fill="red" r="2" /><circle cx="198.0" cy="2.0" data-val="2" fill="red" r="2" /></svg>'
   end
 
   test "to_svg!/1 with non-default options (for line)" do

@@ -923,6 +923,7 @@ defmodule SparklineSvg do
         %SparklineSvg{
           sparkline
           | datapoints: datapoints,
+            input: elem(Enum.unzip(datapoints), 1),
             markers: markers,
             ref_lines: ref_lines,
             window: window

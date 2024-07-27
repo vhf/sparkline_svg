@@ -24,6 +24,7 @@ defmodule SparklineSvg.Draw do
   def chart(%SparklineSvg{} = sparkline) do
     %{
       datapoints: datapoints,
+      input: input,
       markers: markers,
       ref_lines: ref_lines,
       options: %{internal: internal_opts, svg: attrs} = opts
@@ -32,7 +33,7 @@ defmodule SparklineSvg.Draw do
     content = [
       area(datapoints, opts),
       line(datapoints, opts),
-      dots(datapoints, opts),
+      dots(datapoints, input, opts),
       markers(markers, opts),
       ref_lines(ref_lines, opts)
     ]
@@ -49,16 +50,16 @@ defmodule SparklineSvg.Draw do
     render_tag("text", attrs, content, internal_opts)
   end
 
-  @spec dots(Core.points(), SparklineSvg.opts()) :: iolist()
-  defp dots(_datapoints, %{dots: nil}), do: ""
+  @spec dots(Core.points(), Core.points(), SparklineSvg.opts()) :: iolist()
+  defp dots(_datapoints, _input, %{dots: nil}), do: ""
 
-  defp dots(datapoints, options) do
+  defp dots(datapoints, input, options) do
     %{internal: internal_opts, dots: attrs} = options
 
-    Enum.map(datapoints, fn {x, y} ->
+    Enum.zip(datapoints, input)
+    |> Enum.map(fn {{x, y}, input} ->
       attrs = Map.merge(attrs, %{cx: x, cy: y})
-
-      render_tag("circle", attrs, internal_opts)
+      render_tag("circle", attrs, Map.put(internal_opts, :input, input))
     end)
   end
 
@@ -248,6 +249,7 @@ defmodule SparklineSvg.Draw do
   defp cast(value, _opts) when is_list(value), do: value
   defp cast(value, _opts) when is_binary(value), do: value
   defp cast(value, _opts) when is_integer(value), do: Integer.to_string(value)
+  defp cast(fun, opts) when is_function(fun, 1), do: fun.(opts.input)
 
   defp cast(value, opts) when is_float(value) do
     value
